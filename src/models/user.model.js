@@ -1,4 +1,6 @@
 import { Schema, model } from "mongoose";
+import jwt from "jsonwebtoken";
+import bcrypt from "bcrypt";
 
 const userSchema = Schema(
   {
@@ -43,7 +45,7 @@ const userSchema = Schema(
       required: [true, "Password is required"],
     },
     refreshToken: {
-      type: string,
+      type: String,
     },
   },
   { timestamps: true }
@@ -86,4 +88,4 @@ userSchema.methods.generateRefreshToken = function () {
   );
 };
 
-const User = model("User", userSchema);
+export const User = model("User", userSchema);
