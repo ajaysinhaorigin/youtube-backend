@@ -1,4 +1,4 @@
-import mongoose, { isValidObjectId } from "mongoose";
+import mongoose from "mongoose";
 import { Subscription } from "../models/subscription.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
@@ -107,19 +107,17 @@ const getUserChannelSubscribers = asyncHandler(async (req, res) => {
 
     if (!subscribers) {
       return res
-        .status(500)
-        .json(new ApiError(500, error || "subscribers doest not exist!!"));
+        .status(401)
+        .json(new ApiError(401, error || "subscribers doest not exist!!"));
     }
 
-    return res
-      .status(200)
-      .json(
-        new ApiResponse(
-          200,
-          subscribers[0],
-          "Successfully fetched subscriber list"
-        )
-      );
+    return res.status(200).json(
+      new ApiResponse(
+        200,
+        subscribers.length > 0 ? subscribers[0] : {},
+        "Successfully fetched subscriber list"
+      )
+    );
   } catch (error) {
     return res
       .status(500)
@@ -134,7 +132,6 @@ const getUserChannelSubscribers = asyncHandler(async (req, res) => {
 
 // const getUserChannelSubscribers = asyncHandler(async (req, res) => {
 //   const { channelId } = req.params;
-//   console.log("channelId", channelId);
 
 //   try {
 //     // Find all subscriptions for the given channelId
@@ -185,7 +182,6 @@ const getUserChannelSubscribers = asyncHandler(async (req, res) => {
 
 // const getUserChannelSubscribers = asyncHandler(async (req, res) => {
 //   const { channelId } = req.params;
-//   console.log("channelId", channelId);
 
 //   try {
 //     const subscriberList = await Subscription.aggregate([
@@ -253,11 +249,9 @@ const getUserChannelSubscribers = asyncHandler(async (req, res) => {
 //   }
 // });
 
-
 // controller to return channel list to which user has subscribed
 const getSubscribedChannels = asyncHandler(async (req, res) => {
   const { subscriberId } = req.params;
-  console.log("subscribed", subscriberId);
   // TODO: get subscribed channels
 
   try {
@@ -297,18 +291,18 @@ const getSubscribedChannels = asyncHandler(async (req, res) => {
 
     if (!subscribedChannels) {
       return res
-        .status(400)
-        .json(
-          new ApiError(500, getsubscriptions, "subscribers doest not exist!!")
-        );
+        .status(401)
+        .json(new ApiError(401, "subscribers doest not exist!!"));
     }
+
+    console.log("subscribedChannels", subscribedChannels);
 
     return res
       .status(200)
       .json(
         new ApiResponse(
-          500,
-          subscribedChannels[0],
+          200,
+          subscribedChannels.length > 0 ? subscribedChannels[0] : {},
           "Subscribed channels fetched successfully"
         )
       );
