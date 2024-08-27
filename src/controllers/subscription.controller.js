@@ -38,11 +38,7 @@ const toggleSubscription = asyncHandler(async (req, res) => {
     });
 
     if (!insertsubscription) {
-      return res
-        .status(500)
-        .json(
-          new ApiError(500, null, "Something went wrong while subscribing")
-        );
+      throw new ApiError(500, null, "Something went wrong while subscribing");
     }
 
     return res
@@ -55,15 +51,7 @@ const toggleSubscription = asyncHandler(async (req, res) => {
         )
       );
   } catch (error) {
-    return res
-      .status(500)
-      .json(
-        new ApiError(
-          500,
-          null,
-          error || "Something went wrong while subscribing"
-        )
-      );
+    throw new ApiError(500, error || "Something went wrong while subscribing");
   }
 });
 
@@ -106,27 +94,20 @@ const getUserChannelSubscribers = asyncHandler(async (req, res) => {
     ]);
 
     if (!subscribers) {
-      return res
-        .status(401)
-        .json(new ApiError(401, error || "subscribers doest not exist!!"));
+      throw new ApiError(401, error || "subscribers doest not exist!!");
     }
 
-    return res.status(200).json(
-      new ApiResponse(
-        200,
-        subscribers.length > 0 ? subscribers[0] : {},
-        "Successfully fetched subscriber list"
-      )
-    );
-  } catch (error) {
     return res
-      .status(500)
+      .status(200)
       .json(
-        new ApiError(
-          500,
-          error || "Something went wrong while fetching the subscriber list"
+        new ApiResponse(
+          200,
+          subscribers.length > 0 ? subscribers[0] : {},
+          "Successfully fetched subscriber list"
         )
       );
+  } catch (error) {
+    throw new ApiError(500, error || "Something went wrong while fetching the subscriber list");
   }
 });
 
@@ -140,11 +121,7 @@ const getUserChannelSubscribers = asyncHandler(async (req, res) => {
 //       .exec();
 
 //     if (!subscriptions) {
-//       return res
-//         .status(404)
-//         .json(
-//           new ApiError(404,"No subscribers found for this channel")
-//         );
+//       throw new ApiError(404,"No subscribers found for this channel")
 //     }
 
 //     const channel = subscriptions[0].channel;
@@ -168,15 +145,7 @@ const getUserChannelSubscribers = asyncHandler(async (req, res) => {
 //     );
 
 //   } catch (error) {
-//     console.error("Error fetching subscriber list", error);
-//     return res
-//       .status(500)
-//       .json(
-//         new ApiError(
-//           500,
-//           "Something went wrong while fetching the subscriber list"
-//         )
-//       );
+//     throw new ApiError(500, "Something went wrong while fetching the subscriber list" )
 //   }
 // });
 
@@ -237,15 +206,10 @@ const getUserChannelSubscribers = asyncHandler(async (req, res) => {
 //       );
 //   } catch (error) {
 //     console.error("Error fetching subscriber list", error);
-//     return res
-//       .status(500)
-//       .json(
-//         new ApiResponse(
-//           500,
-//           null,
-//           "Something went wrong while fetching the subscriber list"
-//         )
-//       );
+//     throw new ApiError(
+//       500,
+//       "Something went wrong while fetching the subscriber list"
+//     );
 //   }
 // });
 
@@ -290,12 +254,8 @@ const getSubscribedChannels = asyncHandler(async (req, res) => {
     ]);
 
     if (!subscribedChannels) {
-      return res
-        .status(401)
-        .json(new ApiError(401, "subscribers doest not exist!!"));
+      throw new ApiError(401, "subscribers doest not exist!!");
     }
-
-    console.log("subscribedChannels", subscribedChannels);
 
     return res
       .status(200)
@@ -307,15 +267,10 @@ const getSubscribedChannels = asyncHandler(async (req, res) => {
         )
       );
   } catch (error) {
-    console.log("error at getSubscribedChannels", error);
-    return res
-      .status(500)
-      .json(
-        new ApiError(
-          500,
-          error || "Something went wrong while fetching the subscribed channels"
-        )
-      );
+    throw new ApiError(
+      500,
+      error || "Something went wrong while fetching the subscribed channels"
+    );
   }
 });
 

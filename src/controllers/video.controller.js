@@ -59,6 +59,8 @@ const publishAVideo = asyncHandler(async (req, res) => {
       );
   } catch (error) {
     console.log("error", error || "Unauthorized user");
+    throw new ApiError(500, "Something went wrong while uploading video");
+
   }
 });
 
@@ -259,15 +261,11 @@ const getAllVideos = asyncHandler(async (req, res) => {
       .status(200)
       .json(new ApiResponse(200, result, "Videos fetched successfully"));
   } catch (err) {
-    return res
-      .status(500)
-      .json(
-        new ApiResponse(
+    throw  new ApiError(
           500,
-          null,
           "Something went wrong while fetching videos!!" + err.message
         )
-      );
+      
   }
 });
 
