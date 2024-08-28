@@ -8,17 +8,128 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 const getVideoComments = asyncHandler(async (req, res) => {
   //TODO: get all comments for a video
   const { videoId } = req.params;
-  const { page = 1, limit = 10 } = req.query;
+  const {
+    page = 1,
+    limit = 10,
+    query,
+    sortBy = "createdAt",
+    sortType = "desc",
+  } = req.query;
+  const sortOrder = sortType === "desc" ? -1 : 1;
+
+  let aggregationPipeline = [];
+
+  if (videoId) {
+    aggregationPipeline.push({
+      $match: {
+        video: new mongoose.Types.ObjectId(videoId),
+      },
+    });
+  }
+
+  // Filtering
+  if (query) {
+    aggregationPipeline.push({
+      $match: {
+        content: { $regex: query, $options: "i" },
+      },
+    });
+  }
+
+  // Lookup owner details
+  aggregationPipeline.push({
+    $lookup: {
+      from: "users",
+      localField: "owner",
+      foreignField: "_id",
+      as: "ownerDetails",
+    },
+  });
+
+  // Unwind the ownerDetails array
+  aggregationPipeline.push({
+    $unwind: "$ownerDetails",
+  });
+
+  // Lookup likes count
+  aggregationPipeline.push({
+    $lookup: {
+      from: "videos",
+      localField: "video",
+      foreignField: "_id",
+      as: "videoDetail",
+    },
+  });
+    // Unwind the ownerDetails array
+    aggregationPipeline.push({
+      $unwind: "$videoDetail",
+    });
+
+  // Project the required fields
+  aggregationPipeline.push({
+    $project: {
+      content: 1,
+      owner: {
+        _id: "$ownerDetails._id",
+        username: "$ownerDetails.username",
+        fullName: "$ownerDetails.fullName",
+        avatar: "$ownerDetails.avatar",
+      },
+      video: {
+        _id: "$videoDetail._id",
+        videoFile: "$videoDetail.videoFile",
+        thumbnail: "$videoDetail.thumbnail",
+        title: "$videoDetail.title",
+        description: "$videoDetail.description",
+        duration: "$videoDetail.duration",
+        views: "$videoDetail.views",
+        isPublished: "$videoDetail.isPublished",
+      },
+      createdAt: 1,
+      updatedAt: 1,
+    },
+  });
+
+  // Sorting
+  aggregationPipeline.push({
+    $sort: { [sortBy]: sortOrder },
+  });
+
+  // Pagination
+  const options = {
+    page: parseInt(page, 10),
+    limit: parseInt(limit, 10),
+    customLabels: {
+      totalDocs: "totalComment",
+      docs: "comments",
+    },
+  };
+
+  try {
+    // Fetch videos using the aggregation pipeline and paginate
+    const result = await Comment.aggregatePaginate(
+      Comment.aggregate(aggregationPipeline),
+      options
+    );
+
+    return res
+      .status(200)
+      .json(new ApiResponse(200, result, "Comment fetched successfully"));
+  } catch (err) {
+    throw new ApiError(
+      500,
+      "Something went wrong while fetching Comment!!" + err.message
+    );
+  }
 });
 
 const addComment = asyncHandler(async (req, res) => {
   // TODO: add a comment to a video
   const { content } = req.body;
-  const {videoId} = req.params
-    
-    
+  const { videoId } = req.params;
+
   if (!content || content.trim() == "") {
-    throw new ApiError(400, "field is required");
+    throw new ApiError(400, "Content field is required");
   }
 
   try {
@@ -29,11 +140,9 @@ const addComment = asyncHandler(async (req, res) => {
       throw new ApiError(400, "Video does not found");
     }
 
-    console.log("existing video", existingVideo);
-
     const comment = await Comment.create({
       content,
-      video:videoId,
+      video: videoId,
       owner: req.user._id,
     });
 
@@ -51,10 +160,53 @@ const addComment = asyncHandler(async (req, res) => {
 
 const updateComment = asyncHandler(async (req, res) => {
   // TODO: update a comment
+  const { content } = req.body;
+  const { commentId } = req.params;
+
+  if (!content || content.trim() == "") {
+    throw new ApiError(400, "Content field is required");
+  }
+
+  try {
+    const comment = await Comment.findByIdAndUpdate(
+      commentId,
+      {
+        $set: {
+          content,
+        },
+      },
+      { new: true }
+    );
+
+    if (!comment) {
+      throw ApiError(401, "Something went wrong while updating comment");
+    }
+
+    return res
+      .status(200)
+      .json(new ApiResponse(200, comment, "Successfully updated comment"));
+  } catch (error) {
+    throw ApiError(500, "Something went wrong while updating comment");
+  }
 });
 
 const deleteComment = asyncHandler(async (req, res) => {
-  // TODO: delete a comment
+  // TODO: update a comment
+  const { commentId } = req.params;
+
+  try {
+    const comment = await Comment.findByIdAndDelete(commentId);
+
+    if (!comment) {
+      throw ApiError(401, "Something went wrong while Deleting comment");
+    }
+
+    return res
+      .status(200)
+      .json(new ApiResponse(200, comment, "Successfully deleted comment"));
+  } catch (error) {
+    throw ApiError(500, "Something went wrong while deleting comment");
+  }
 });
 
 export { getVideoComments, addComment, updateComment, deleteComment };
