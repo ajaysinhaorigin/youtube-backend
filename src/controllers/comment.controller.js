@@ -60,10 +60,10 @@ const getVideoComments = asyncHandler(async (req, res) => {
       as: "videoDetail",
     },
   });
-    // Unwind the ownerDetails array
-    aggregationPipeline.push({
-      $unwind: "$videoDetail",
-    });
+  // Unwind the ownerDetails array
+  aggregationPipeline.push({
+    $unwind: "$videoDetail",
+  });
 
   // Project the required fields
   aggregationPipeline.push({
@@ -168,7 +168,17 @@ const updateComment = asyncHandler(async (req, res) => {
   }
 
   try {
-    const comment = await Comment.findByIdAndUpdate(
+    const existingComment = await Comment.findById(commentId);
+
+    if (!existingComment) {
+      throw new ApiError(400, "Comment does not exist");
+    }
+
+    if (existingComment.owner.toString() !== req.user._id.toString()) {
+      throw new ApiError(403, "You are not authorized to update this Comment");
+    }
+
+    const updatedComment = await Comment.findByIdAndUpdate(
       commentId,
       {
         $set: {
@@ -178,13 +188,15 @@ const updateComment = asyncHandler(async (req, res) => {
       { new: true }
     );
 
-    if (!comment) {
+    if (!updatedComment) {
       throw ApiError(401, "Something went wrong while updating comment");
     }
 
     return res
       .status(200)
-      .json(new ApiResponse(200, comment, "Successfully updated comment"));
+      .json(
+        new ApiResponse(200, updatedComment, "Successfully updated comment")
+      );
   } catch (error) {
     throw ApiError(500, "Something went wrong while updating comment");
   }
@@ -195,6 +207,16 @@ const deleteComment = asyncHandler(async (req, res) => {
   const { commentId } = req.params;
 
   try {
+    const existingComment = await Comment.findById(commentId);
+
+    if (!existingComment) {
+      throw new ApiError(400, "Comment does not exist");
+    }
+
+    if (existingComment.owner.toString() !== req.user._id.toString()) {
+      throw new ApiError(403, "You are not authorized to delete this Comment");
+    }
+
     const comment = await Comment.findByIdAndDelete(commentId);
 
     if (!comment) {
