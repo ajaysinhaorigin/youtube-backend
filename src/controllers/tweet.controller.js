@@ -41,8 +41,6 @@ const getAllTweets = asyncHandler(async (req, res) => {
     sortType = "desc",
   } = req.query;
   const sortOrder = sortType === "desc" ? -1 : 1;
-  //   const { userId } = req.params;
-
   let aggregationPipeline = [];
 
   if (userId) {
