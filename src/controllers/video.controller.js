@@ -60,7 +60,6 @@ const publishAVideo = asyncHandler(async (req, res) => {
   } catch (error) {
     console.log("error", error || "Unauthorized user");
     throw new ApiError(500, "Something went wrong while uploading video");
-
   }
 });
 
@@ -261,11 +260,10 @@ const getAllVideos = asyncHandler(async (req, res) => {
       .status(200)
       .json(new ApiResponse(200, result, "Videos fetched successfully"));
   } catch (err) {
-    throw  new ApiError(
-          500,
-          "Something went wrong while fetching videos!!" + err.message
-        )
-      
+    throw new ApiError(
+      500,
+      "Something went wrong while fetching videos!!" + err.message
+    );
   }
 });
 
@@ -291,7 +289,10 @@ const togglePublishStatus = asyncHandler(async (req, res) => {
   }
 
   if (existedVideo.owner.toString() !== req.user._id.toString()) {
-    throw new ApiError(403, "You are not authorized to toggle the publish status");
+    throw new ApiError(
+      403,
+      "You are not authorized to toggle the publish status"
+    );
   }
 
   const video = await Video.findByIdAndUpdate(
@@ -323,4 +324,3 @@ export {
   getVideoById,
   togglePublishStatus,
 };
- 

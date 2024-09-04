@@ -107,7 +107,10 @@ const getUserChannelSubscribers = asyncHandler(async (req, res) => {
         )
       );
   } catch (error) {
-    throw new ApiError(500, error || "Something went wrong while fetching the subscriber list");
+    throw new ApiError(
+      500,
+      error || "Something went wrong while fetching the subscriber list"
+    );
   }
 });
 

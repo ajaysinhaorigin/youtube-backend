@@ -71,7 +71,9 @@ const toggleCommentLike = asyncHandler(async (req, res) => {
       }
       return res
         .status(201)
-        .json(new ApiResponse(201, removedLike, "Comment Unliked successfully"));
+        .json(
+          new ApiResponse(201, removedLike, "Comment Unliked successfully")
+        );
     }
 
     const insertedLike = await Like.create({
