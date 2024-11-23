@@ -18,4 +18,4 @@ Welcome to the backend project of a video streaming platform like YouTube, desig
 
 ## 🛠️ Getting Started
 
-To get started, clone the repository
+To get started, clone the repository.
